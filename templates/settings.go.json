@@ -1,0 +1,13 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "gofmt -w ." },
+          { "type": "command", "command": "go vet ./... 2>&1 | head -20", "timeout": 20000 }
+        ]
+      }
+    ]
+  }
+}

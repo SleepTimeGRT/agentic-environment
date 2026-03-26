@@ -10,12 +10,15 @@
 # ── brew formula (버전 무관한 CLI 도구) ──────────────────
 brew:
   - gh              # GitHub CLI
-  # yq는 bootstrap Layer 0에서 설치 (manifest 파싱 전제조건)
+  # yq, jq는 bootstrap Layer 0에서 하드코딩 설치
+  #   yq: manifest 파싱 전제조건
+  #   jq: ykdojo setup.sh + context-bar.sh 전제조건
 
 # ── brew cask (macOS 앱 — dmg보다 cask 우선) ───────────
 cask:
   - cmux            # 멀티 에이전트 터미널
   - antigravity     # Google Antigravity IDE
+  - docker          # Docker Desktop
 
 # ── script (공식 설치 스크립트 사용) ─────────────────────
 # brew cask가 없거나, 공식이 별도 installer를 권장하는 도구.
@@ -60,6 +63,8 @@ managed:
     note: ".dmg 수동 다운로드 (brew cask 없음)"
 
 # ── plugins (Claude Code 플러그인) ──────────────────────
+# 참조 목록. 실제 설치는 settings.json의 enabledPlugins에 의해
+# claude 첫 실행 시 자동으로 이루어짐.
 plugins:
   - context7
   - code-review
@@ -87,6 +92,7 @@ plugins:
   - notion
   - dx                # ykdojo/claude-code-tips
   - process-todos     # SleepTimeGRT/process-todos-plugin
+  - work              # SleepTimeGRT/work-plugin
 
 # ── skills (git clone으로 설치) ─────────────────────────
 skills:
@@ -103,6 +109,14 @@ skills:
     optional: true
     note: "Obsidian CLI 스킬 (Obsidian 사용자만)"
 
+# ── MCP servers (claude mcp add) ─────────────────────────
+mcp:
+  - name: playwright
+    scope: user
+    command: "npx @playwright/mcp@latest"
+    note: "Browser automation for QA testing"
+
 # ── extra marketplaces ──────────────────────────────────
+# 참조 목록. settings.json의 extraKnownMarketplaces에서 설정.
 marketplaces:
   - sleeptimegrt-plugins

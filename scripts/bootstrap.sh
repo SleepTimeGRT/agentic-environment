@@ -8,7 +8,9 @@
 # 사용법:
 #   bash scripts/bootstrap.sh              # 전체 설치
 #   bash scripts/bootstrap.sh --skip-tools # CLI 도구 스킵, 설정만
-set -euo pipefail
+set -uo pipefail
+# set -e 제거: 개별 설치 실패가 전체 스크립트를 중단하지 않도록.
+# 각 단계에서 실패를 개별 처리.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -29,9 +31,10 @@ echo " Agentic Environment Bootstrap"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo -e "${NC}"
 
-# ── Layer 0: Prerequisites (Homebrew + yq) ─────
+# ── Layer 0: Prerequisites (Homebrew + yq + jq) ──
 # 닭-달걀 문제: manifest를 파싱하려면 yq가 필요하고, yq는 brew로 설치.
-# 이 두 개만 하드코딩.
+# jq는 ykdojo setup.sh + context-bar.sh에 필요.
+# 이 세 개를 하드코딩.
 echo -e "${BOLD}[0/6] Prerequisites${NC}"
 
 if ! command -v brew &>/dev/null; then
@@ -44,10 +47,18 @@ if ! command -v brew &>/dev/null; then
   ok "Homebrew"
 else skip "Homebrew"; fi
 
-if ! command -v yq &>/dev/null; then
-  brew install yq
-  ok "yq (YAML parser)"
-else skip "yq"; fi
+# yq: manifest 파싱 전제조건, jq: ykdojo setup.sh + context-bar.sh 전제조건.
+# 둘 다 manifest brew 섹션이 아닌 여기서 하드코딩 (닭-달걀).
+PREREQ_TO_INSTALL=()
+if ! command -v yq &>/dev/null; then PREREQ_TO_INSTALL+=(yq); else skip "yq"; fi
+if ! command -v jq &>/dev/null; then PREREQ_TO_INSTALL+=(jq); else skip "jq"; fi
+if [[ ${#PREREQ_TO_INSTALL[@]} -gt 0 ]]; then
+  brew install "${PREREQ_TO_INSTALL[@]}"
+  for pkg in "${PREREQ_TO_INSTALL[@]}"; do ok "$pkg"; done
+fi
+
+# git은 Homebrew 설치 시 Xcode CLT와 함께 설치됨.
+# curl은 macOS 기본 포함.
 
 # manifest 존재 확인
 if [[ ! -f "$MANIFEST" ]]; then
@@ -83,8 +94,11 @@ if [[ "$SKIP_TOOLS" == false ]]; then
     fi
 
     echo "  Installing $key..."
-    eval "$install_cmd"
-    ok "$key"
+    if eval "$install_cmd"; then
+      ok "$key"
+    else
+      fail "$key (install failed — continuing)"
+    fi
 
     # nvm 설치 후 Node.js 설치 (managed 섹션)
     if [[ "$key" == "nvm" ]]; then
@@ -180,6 +194,27 @@ if [[ "${SKIP_SETTINGS:-false}" != true ]]; then
   ok "settings.json (global — security + personal only)"
 fi
 
+# ykdojo/claude-code-tips setup (statusLine, DX plugin, cc-safe, permissions, aliases 등)
+# Skip: 4 (disable auto-updates), 8 (disable attribution — Co-Authored-By 유지)
+# 참고: setup.sh 내부에서 claude CLI가 없으면 DX plugin 설치만 스킵하고 나머지는 진행.
+echo "  Running ykdojo/claude-code-tips setup.sh (skip 4,8)..."
+if echo "4 8" | bash <(curl -s https://raw.githubusercontent.com/ykdojo/claude-code-tips/main/scripts/setup.sh); then
+  ok "ykdojo setup (DX, cc-safe, statusLine, permissions, aliases, fork shortcut)"
+else
+  fail "ykdojo setup (partial failure — continuing)"
+fi
+
+# Playwright MCP (browser automation)
+if command -v claude &>/dev/null; then
+  if claude mcp list 2>/dev/null | grep -q "playwright"; then
+    skip "Playwright MCP"
+  else
+    claude mcp add -s user playwright npx @playwright/mcp@latest
+    ok "Playwright MCP"
+  fi
+else
+  warn "Playwright MCP (claude CLI not found — install claude-code first, then: claude mcp add -s user playwright npx @playwright/mcp@latest)"
+fi
 
 # ── Layer 5: Skills ──────────────────────────────
 echo -e "\n${BOLD}[5/6] Skills${NC}"
@@ -212,7 +247,11 @@ for i in $(seq 0 $((skill_count - 1))); do
 
   echo "  Installing $name..."
   TMP=$(mktemp -d)
-  git clone --depth 1 "https://github.com/$repo.git" "$TMP"
+  if ! git clone --depth 1 "https://github.com/$repo.git" "$TMP" 2>/dev/null; then
+    fail "$name (git clone failed — continuing)"
+    rm -rf "$TMP" 2>/dev/null || true
+    continue
+  fi
 
   # 스킬에 따라 설치 방법이 다름
   if [[ "$name" == "obsidian-cli" ]]; then

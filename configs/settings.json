@@ -3,10 +3,6 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "ENABLE_TOOL_SEARCH": "true"
   },
-  "attribution": {
-    "commit": "",
-    "pr": ""
-  },
   "permissions": {
     "allow": [
       "Read(**)",
@@ -48,6 +44,7 @@
     "dx@ykdojo": true,
     "atlassian@claude-plugins-official": true,
     "process-todos@sleeptimegrt-plugins": true,
+    "work@sleeptimegrt-plugins": true,
     "vercel@claude-plugins-official": true,
     "notion@claude-plugins-official": true
   },

@@ -134,6 +134,19 @@ done
 echo -e "\n${BOLD}Claude Code Config${NC}"
 
 [[ -f ~/.claude/settings.json ]] && check_pass "~/.claude/settings.json" || check_fail "~/.claude/settings.json"
+[[ -x ~/.claude/scripts/context-bar.sh ]] && check_pass "context-bar.sh (statusLine)" || check_fail "context-bar.sh (statusLine — run bootstrap.sh)"
+command -v jq &>/dev/null && check_pass "jq (context-bar.sh dependency)" || check_fail "jq (brew install jq)"
+
+# MCP servers
+if command -v claude &>/dev/null; then
+  if claude mcp list 2>/dev/null | grep -q "playwright"; then
+    check_pass "Playwright MCP"
+  else
+    check_fail "Playwright MCP (claude mcp add -s user playwright npx @playwright/mcp@latest)"
+  fi
+else
+  check_warn "Playwright MCP (claude CLI not found — install claude-code first)"
+fi
 
 # gh 인증 상태
 if gh auth status &>/dev/null 2>&1; then

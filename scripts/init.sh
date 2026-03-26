@@ -28,6 +28,8 @@ for arg in "$@"; do
   case "$arg" in
     --ts)   STACK="typescript" ;;
     --py)   STACK="python" ;;
+    --go)   STACK="go" ;;
+    --rust) STACK="rust" ;;
     --team) TEAM=true ;;
     -*)     echo "Unknown option: $arg"; exit 1 ;;
     *)      PROJECT_PATH="$arg" ;;
@@ -35,11 +37,13 @@ for arg in "$@"; do
 done
 
 if [[ -z "$PROJECT_PATH" ]]; then
-  echo "Usage: bash scripts/init.sh <project-path> [--ts|--py] [--team]"
+  echo "Usage: bash scripts/init.sh <project-path> [--ts|--py|--go|--rust] [--team]"
   echo ""
   echo "Options:"
   echo "  --ts     TypeScript 프로젝트 (format → lint → tsc 훅)"
   echo "  --py     Python 프로젝트 (ruff format → ruff check → pytest 훅)"
+  echo "  --go     Go 프로젝트 (gofmt → go vet 훅)"
+  echo "  --rust   Rust 프로젝트 (cargo fmt → cargo clippy 훅)"
   echo "  --team   팀 규칙 추가 (git push --force 차단)"
   exit 1
 fi
@@ -94,6 +98,14 @@ else
     python)
       cp "$TEMPLATES/settings.python.json" "$SETTINGS_FILE"
       ok ".claude/settings.json (Python: ruff format → ruff check → pytest)"
+      ;;
+    go)
+      cp "$TEMPLATES/settings.go.json" "$SETTINGS_FILE"
+      ok ".claude/settings.json (Go: gofmt → go vet)"
+      ;;
+    rust)
+      cp "$TEMPLATES/settings.rust.json" "$SETTINGS_FILE"
+      ok ".claude/settings.json (Rust: cargo fmt → cargo clippy)"
       ;;
     *)
       # 스택 미지정 — 빈 설정

@@ -1,13 +1,13 @@
-# WORK.md
+# WORK.md — Week of [Month Day]
 
-## Doing
-- [ ] [현재 작업]
+## Shipping This Week
+- [ ] [작업 항목]
 
 ## Blocked
-- [블로커 상황 + 해결 진행도]
+- [블로커 + 해결 진행도]
 
 ## Next Up
 - [다음 작업들]
 
-## Done
-- [x] YYYY-MM-DD: [완료된 작업]
+## Shipped
+- [Month]: 0 features
