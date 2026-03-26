@@ -46,6 +46,12 @@ Claude Code는 5단계 우선순위로 설정을 해석한다 (높을수록 우�
   "permissions": {
     "deny": [
       "Bash(rm -rf *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push -f)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git push --force-with-lease)",
+      "Bash(git push * +*)",
       "Read(.env)", "Read(.env.*)",
       "Write(.env)", "Write(.env.*)"
     ]

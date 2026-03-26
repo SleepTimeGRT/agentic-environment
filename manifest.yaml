@@ -7,6 +7,10 @@
 # 설치 확인: command -v (바이너리 존재 여부만 체크)
 # 설치 우선순위: brew cask > brew formula > 공식 스크립트 > 수동
 
+# ── brew tap (서드파티 탭 — brew/cask 설치 전에 실행) ───
+tap:
+  - manaflow-ai/cmux  # cmux cask 전제조건
+
 # ── brew formula (버전 무관한 CLI 도구) ──────────────────
 brew:
   - gh              # GitHub CLI

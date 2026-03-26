@@ -44,7 +44,7 @@ if [[ -z "$PROJECT_PATH" ]]; then
   echo "  --py     Python 프로젝트 (ruff format → ruff check → pytest 훅)"
   echo "  --go     Go 프로젝트 (gofmt → go vet 훅)"
   echo "  --rust   Rust 프로젝트 (cargo fmt → cargo clippy 훅)"
-  echo "  --team   팀 규칙 추가 (git push --force 차단)"
+  echo "  --team   팀 규칙 추가 (SessionStart hook)"
   exit 1
 fi
 
@@ -121,7 +121,7 @@ if [[ "$TEAM" == true ]]; then
   if command -v yq &>/dev/null; then
     TEAM_SETTINGS="$TEMPLATES/settings.team.json"
     yq -i -p json -o json '. *+ load("'"$TEAM_SETTINGS"'")' "$SETTINGS_FILE"
-    ok "Team rules merged (deny: git push --force, SessionStart hook)"
+    ok "Team rules merged (SessionStart hook)"
 
     # session-context.sh 복사
     mkdir -p "$PROJECT_PATH/scripts"

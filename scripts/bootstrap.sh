@@ -71,7 +71,11 @@ ok "manifest.yaml found"
 if [[ "$SKIP_TOOLS" == false ]]; then
   echo -e "\n${BOLD}[1/6] CLI Tools (official install scripts)${NC}"
 
-  for key in $(yq '.script | keys | .[]' "$MANIFEST"); do
+  SCRIPT_KEYS=$(yq '.script | keys | .[]' "$MANIFEST")
+  if [[ -z "$SCRIPT_KEYS" ]]; then
+    warn "No script entries found in manifest"
+  fi
+  for key in $SCRIPT_KEYS; do
     # homebrew는 이미 Layer 0에서 설치
     [[ "$key" == "homebrew" ]] && continue
 
@@ -114,6 +118,24 @@ if [[ "$SKIP_TOOLS" == false ]]; then
     fi
   done
 
+  # ── Layer 1.5: Brew taps (manifest 선언) ──────
+  TAPS=$(yq '.tap[]' "$MANIFEST" 2>/dev/null)
+  if [[ -n "$TAPS" ]]; then
+    TAPS_INSTALLED=$(brew tap 2>/dev/null)
+    for tap_name in $TAPS; do
+      if echo "$TAPS_INSTALLED" | grep -qxF "$tap_name"; then
+        skip "tap $tap_name"
+      else
+        echo "  Tapping $tap_name..."
+        if brew tap "$tap_name"; then
+          ok "tap $tap_name"
+        else
+          fail "tap $tap_name (brew tap failed — continuing)"
+        fi
+      fi
+    done
+  fi
+
   # ── Layer 2: Brew formula ──────────────────────
   echo -e "\n${BOLD}[2/6] Brew Packages${NC}"
 
@@ -134,9 +156,6 @@ if [[ "$SKIP_TOOLS" == false ]]; then
 
   # ── Layer 3: Brew cask ─────────────────────────
   echo -e "\n${BOLD}[3/6] macOS Apps (cask)${NC}"
-
-  # cmux tap 필요
-  brew tap manaflow-ai/cmux 2>/dev/null || true
 
   CASK_INSTALLED=$(brew list --cask 2>/dev/null)
   CASK_TO_INSTALL=()
@@ -221,13 +240,16 @@ echo -e "\n${BOLD}[5/6] Skills${NC}"
 
 mkdir -p ~/.claude/skills
 
-skill_count=$(yq '.skills | length' "$MANIFEST")
-for i in $(seq 0 $((skill_count - 1))); do
-  repo=$(yq ".skills[$i].repo" "$MANIFEST")
-  name=$(yq ".skills[$i].name" "$MANIFEST")
-  setup_cmd=$(yq ".skills[$i].setup // \"\"" "$MANIFEST")
-  optional=$(yq ".skills[$i].optional // false" "$MANIFEST")
-  note=$(yq ".skills[$i].note // \"\"" "$MANIFEST")
+# 전체 skills를 단일 yq 호출로 TSV 추출
+SKILLS_TSV=$(yq '.skills[] | [.repo, .name, .setup // "", .optional // "false", .note // ""] | @tsv' "$MANIFEST" 2>/dev/null)
+if [[ -z "$SKILLS_TSV" ]]; then
+  warn "No skills found in manifest"
+fi
+while IFS=$'\t' read -r repo name setup_cmd optional note; do
+  if [[ -z "$repo" || -z "$name" ]]; then
+    warn "Malformed skill entry — skipping"
+    continue
+  fi
 
   target_dir="$HOME/.claude/skills/$name"
 
@@ -270,7 +292,7 @@ for i in $(seq 0 $((skill_count - 1))); do
 
   rm -rf "$TMP" 2>/dev/null || true
   ok "$name"
-done
+done <<< "$SKILLS_TSV"
 
 # ── Layer 6: Verification ────────────────────────
 echo -e "\n${BOLD}[6/6] Verification${NC}"
