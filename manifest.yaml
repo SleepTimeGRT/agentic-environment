@@ -1,0 +1,108 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Agentic Environment Manifest
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 모든 설치 대상을 선언적으로 관리.
+# bootstrap.sh가 이 파일을 읽어서 설치.
+#
+# 설치 확인: command -v (바이너리 존재 여부만 체크)
+# 설치 우선순위: brew cask > brew formula > 공식 스크립트 > 수동
+
+# ── brew formula (버전 무관한 CLI 도구) ──────────────────
+brew:
+  - gh              # GitHub CLI
+  # yq는 bootstrap Layer 0에서 설치 (manifest 파싱 전제조건)
+
+# ── brew cask (macOS 앱 — dmg보다 cask 우선) ───────────
+cask:
+  - cmux            # 멀티 에이전트 터미널
+  - antigravity     # Google Antigravity IDE
+
+# ── script (공식 설치 스크립트 사용) ─────────────────────
+# brew cask가 없거나, 공식이 별도 installer를 권장하는 도구.
+script:
+  homebrew:
+    check: brew
+    install: '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+
+  nvm:
+    check: "[ -d $HOME/.nvm ]"
+    install: "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash"
+
+  pnpm:
+    check: pnpm
+    install: "curl -fsSL https://get.pnpm.io/install.sh | sh -"
+
+  bun:
+    check: bun
+    install: "curl -fsSL https://bun.sh/install | bash"
+
+  claude-code:
+    check: claude
+    install: "curl -fsSL https://claude.ai/install.sh | bash"
+
+  codex:
+    check: codex
+    install: "npm i -g @openai/codex"
+
+  gemini-cli:
+    check: gemini
+    install: "npm install -g @google/gemini-cli"
+
+# ── managed (버전 매니저 경유 또는 수동) ─────────────────
+managed:
+  node:
+    via: nvm
+    version: 22
+
+  claude-desktop:
+    app: Claude.app
+    install: "https://claude.com/download"
+    note: ".dmg 수동 다운로드 (brew cask 없음)"
+
+# ── plugins (Claude Code 플러그인) ──────────────────────
+plugins:
+  - context7
+  - code-review
+  - commit-commands
+  - superpowers
+  - frontend-design
+  - claude-md-management
+  - plugin-dev
+  - agent-sdk-dev
+  - github
+  - code-simplifier
+  - ralph-loop
+  - typescript-lsp
+  - pyright-lsp
+  - playwright
+  - figma
+  - supabase
+  - hookify
+  - playground
+  - skill-creator
+  - explanatory-output-style
+  - stripe
+  - atlassian
+  - vercel
+  - notion
+  - dx                # ykdojo/claude-code-tips
+  - process-todos     # SleepTimeGRT/process-todos-plugin
+
+# ── skills (git clone으로 설치) ─────────────────────────
+skills:
+  - repo: garrytan/gstack
+    name: gstack
+    setup: ./setup
+
+  - repo: hashangit/cmux-skill
+    name: using-cmux
+    setup: ./install.sh
+
+  - repo: kepano/obsidian-skills
+    name: obsidian-cli
+    optional: true
+    note: "Obsidian CLI 스킬 (Obsidian 사용자만)"
+
+# ── extra marketplaces ──────────────────────────────────
+marketplaces:
+  - sleeptimegrt-plugins

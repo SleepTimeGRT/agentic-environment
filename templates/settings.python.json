@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "ruff format" },
+          { "type": "command", "command": "ruff check --fix" },
+          { "type": "command", "command": "pytest --tb=short -q 2>&1 | tail -20", "timeout": 30000 }
+        ]
+      }
+    ]
+  }
+}

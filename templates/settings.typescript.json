@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "pnpm format" },
+          { "type": "command", "command": "pnpm lint --fix" },
+          { "type": "command", "command": "npx tsc --noEmit --pretty 2>&1 | head -20", "timeout": 20000 }
+        ]
+      }
+    ]
+  }
+}
