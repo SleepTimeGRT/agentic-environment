@@ -18,10 +18,6 @@ bash scripts/bootstrap.sh --skip-tools
 manifest.yaml               # 모든 설치 대상 선언 (packages, plugins, skills)
 cmux-launch.sh              # cmux 워크스페이스 런처 (프로젝트별, 자체 완결형)
 
-cmux/
-  setup-cmux.sh             # cmux 훅 + 테마 설치 스크립트
-  cmux-hooks.json           # Claude Code 훅 정의 (이식용)
-
 scripts/
   bootstrap.sh              # manifest를 읽어서 원샷 환경 세팅
   init.sh                   # 새 프로젝트 스택별 시드 (--ts, --py, --team)
@@ -51,17 +47,7 @@ docs/
 
 cmux (AI 코딩 에이전트용 macOS 터미널)와 Claude Code를 연동합니다.
 
-### 1. 훅 + 테마 설치
-
-어디서든 실행 가능. Claude Code가 입력 대기/권한 요청/작업 완료 시 cmux 사이드바 상태 표시 + macOS 사운드 알림.
-
-```bash
-bash cmux/setup-cmux.sh              # 훅 + 테마 설치
-bash cmux/setup-cmux.sh --hooks-only # 훅만 설치
-bash cmux/setup-cmux.sh --uninstall  # 제거
-```
-
-### 2. 워크스페이스 레이아웃
+### 워크스페이스 레이아웃
 
 cmux 앱 안 터미널에서 실행. 프로젝트별 워크스페이스를 자동 생성합니다.
 
